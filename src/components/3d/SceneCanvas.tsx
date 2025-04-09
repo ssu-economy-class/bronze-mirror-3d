@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { Person } from "@/components/3d/person/Person";
+import { OrbitControls, Environment } from "@react-three/drei";
+import { Mirror } from "@/components/3d/Mirror";
+import Background from "@/components/3d/Background";
 
 interface SceneCanvasProps {
   personTextureList: string[];
@@ -9,23 +10,25 @@ interface SceneCanvasProps {
 export default function SceneCanvas({ personTextureList }: SceneCanvasProps) {
   return (
     <Canvas
-      camera={{ position: [0, 40, 20], fov: 50 }}
+      camera={{ position: [0, 60, 40], fov: 50 }}
       style={{ width: "100vw", height: "100vh" }}
     >
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.5} />
       <directionalLight position={[30, 50, 10]} intensity={1} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#e5e5e5" />
-      </mesh>
+
+      <Environment background files="/models/sky.hdr" />
+
+      <Background />
+
       <OrbitControls
         enableRotate={true}
         maxPolarAngle={Math.PI / 2.2}
         minPolarAngle={Math.PI / 3}
         target={[0, 0, 0]}
       />
-      {personTextureList.map((url) => (
-        <Person key={url} textureUrl={url} />
+
+      {personTextureList.map((url, index) => (
+        <Mirror key={index} textureUrl={url} />
       ))}
     </Canvas>
   );

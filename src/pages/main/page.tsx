@@ -1,47 +1,32 @@
-import { useUploadImage } from "@/api/useUploadImage";
-import { useGetImage } from "@/api/useGetImage"; // 🔥 추가!
-import SceneCanvas from "@/components/3d/SceneCanvas";
-import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
+import { useSpawnedImagesStore } from "@/stores/useSpawnedImagesStore";
+import SceneCanvas from "@/components/3d/SceneCanvas";
+import { useRecentImageUrls } from "@/pages/main/useImagePolling";
 
 export default function MainPage() {
-  const { uploadImage, loading, error } = useUploadImage();
-  const textureUrl = useGetImage();
-  const [personList, setPersonList] = useState<string[]>([]);
+  const { data: recentUrls = [] } = useRecentImageUrls();
+  const { spawnedUrls, addSpawnedUrls } = useSpawnedImagesStore();
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadImage(file);
-    }
-  };
+  const [activeUrls, setActiveUrls] = useState<string[]>([]);
+
+  // ✅ 콘솔 로그로 확인
+  useEffect(() => {
+    console.log("[recentUrls]", recentUrls);
+  }, [recentUrls]);
 
   useEffect(() => {
-    if (!textureUrl) return;
-    setPersonList((prev) => {
-      if (prev.includes(textureUrl)) return prev;
-      const updated = [...prev, textureUrl];
-      if (updated.length > 10) updated.shift();
-      return updated;
-    });
-  }, [textureUrl]);
+    const newUrls = recentUrls.filter((url) => !spawnedUrls.includes(url));
 
-  console.log(textureUrl);
+    if (newUrls.length > 0) {
+      console.log("[newUrls]", newUrls);
+      addSpawnedUrls(newUrls);
+      setActiveUrls((prev) => [...prev, ...newUrls]);
+    }
+  }, [recentUrls, spawnedUrls, addSpawnedUrls]);
 
   return (
     <div className="relative w-full h-screen">
-      <SceneCanvas personTextureList={personList} />
-      <div className="absolute top-4 left-4 z-10">
-        <Input
-          className="cursor-pointer"
-          type="file"
-          onChange={handleImageUpload}
-          disabled={loading}
-          accept="image/*"
-        />
-        {loading && <p>업로드 중...</p>}
-        {error && <p>{error}</p>}
-      </div>
+      <SceneCanvas personTextureList={activeUrls} />
     </div>
   );
 }
